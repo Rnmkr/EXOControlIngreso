@@ -42,14 +42,15 @@ namespace EXOControlIngreso
             //CheckAuth();
 
             VersionTextBlock.Text = Assembly.GetExecutingAssembly().GetName().Version.ToString();
-            LiveTimeTextBlock.Text = DateTime.Now.ToString("HH:mm");
-            LiveDateTextBlock.Text = DateTime.Now.ToLongDateString();
+            //LiveTimeTextBlock.Text = DateTime.Now.ToString("HH:mm");
+            //LiveDateTextBlock.Text = DateTime.Now.ToLongDateString();
 
             try
             {
                 InitializeRemoteSqlConnection();
                 InitializeLocalDatabases();
                 InitializeTimers();
+                SyncRemoteDatabase(); //already calls InitializeRemoteSqlConnection();
             }
             catch (Exception e)
             {
@@ -88,7 +89,7 @@ namespace EXOControlIngreso
 
         private void InitializeTimers()
         {
-            LiveDateTimeTimer.Interval = TimeSpan.FromSeconds(60);
+            LiveDateTimeTimer.Interval = TimeSpan.FromSeconds(1);
             LiveDateTimeTimer.Tick += LiveDateTimeTimer_Tick;
             LiveDateTimeTimer.Start();
 
@@ -105,7 +106,17 @@ namespace EXOControlIngreso
 
         private void LiveDateTimeTimer_Tick(object sender, EventArgs e)
         {
-            LiveTimeTextBlock.Text = DateTime.Now.ToString("HH:mm");
+            if (LiveDotsTextBlock.Visibility == Visibility.Visible)
+            {
+                LiveDotsTextBlock.Visibility = Visibility.Hidden;
+            }
+            else
+            {
+                LiveDotsTextBlock.Visibility = Visibility.Visible;
+            }
+            LiveHourTextBlock.Text = DateTime.Now.ToString("HH");
+            LiveMinutesTextBlock.Text = DateTime.Now.ToString("mm");
+
             LiveDateTextBlock.Text = DateTime.Now.ToLongDateString();
         }
 
@@ -131,7 +142,7 @@ namespace EXOControlIngreso
         private void Window_PreviewKeyDown(object sender, KeyEventArgs e)
         {
             var key = e.Key.ToString();
-            
+
             if (!OnlyDigitsRegex.IsMatch(key))
             {
                 return;
@@ -211,7 +222,7 @@ namespace EXOControlIngreso
                     Log("ERROR GETRREMOTEUSERLIST" + Environment.NewLine + e.ToString() + Environment.NewLine, w);
                 }
 
-                MessageLabel.Content = "Error obteniendo usuarios!";
+                MessageLabel.Content = "Error obteniendo usuarios! Reinicie el equipo.";
             }
             finally
             {

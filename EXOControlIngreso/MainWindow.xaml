@@ -13,8 +13,8 @@
     WindowStartupLocation="CenterScreen"
     Topmost="True"
     WindowStyle="None"
-    Background="AntiqueWhite" 
-    PreviewKeyDown="Window_PreviewKeyDown" 
+    Background="AntiqueWhite"
+    PreviewKeyDown="Window_PreviewKeyDown"
     WindowState="Maximized">
     <Grid>
         <Grid.RowDefinitions>
@@ -48,14 +48,37 @@
                     FontWeight="Bold"
                     VerticalAlignment="Center"
                     HorizontalAlignment="Center" />
-                <TextBlock
-                    Name="LiveTimeTextBlock"
-                    TextWrapping="NoWrap"
-                    Text="%TIME%"
-                    FontSize="144"
-                    FontWeight="Bold"
-                    HorizontalAlignment="Center"
-                    VerticalAlignment="Center" />
+                <StackPanel
+                    Orientation="Horizontal"
+                    HorizontalAlignment="Center">
+                    <TextBlock
+                        Name="LiveHourTextBlock"
+                        TextWrapping="NoWrap"
+                        Text="--"
+                        FontSize="400"
+                        FontWeight="Bold"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        FontFamily="Century Gothic" />
+                    <TextBlock
+                        Name="LiveDotsTextBlock"
+                        TextWrapping="NoWrap"
+                        Text=":"
+                        FontSize="400"
+                        FontWeight="Bold"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        FontFamily="Century Gothic" />
+                    <TextBlock
+                        Name="LiveMinutesTextBlock"
+                        TextWrapping="NoWrap"
+                        Text="--"
+                        FontSize="400"
+                        FontWeight="Bold"
+                        HorizontalAlignment="Center"
+                        VerticalAlignment="Center"
+                        FontFamily="Century Gothic" />
+                </StackPanel>
             </StackPanel>
         </Border>
         <Label
