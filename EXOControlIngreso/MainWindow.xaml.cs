@@ -50,7 +50,6 @@ namespace EXOControlIngreso
                 InitializeRemoteSqlConnection();
                 InitializeLocalDatabases();
                 InitializeTimers();
-                SyncRemoteDatabase(); //
             }
             catch (Exception e)
             {
@@ -59,7 +58,7 @@ namespace EXOControlIngreso
                     Log("ERROR CTOR" + Environment.NewLine + e.ToString() + Environment.NewLine, w);
                 }
 
-                MessageLabel.Content = "ERROR INICIANDO";
+                MessageLabel.Content = "ERROR INICIANDO. REINICIE EL EQUIPO.";
             }
 
             SpeechSynth.Volume = 100;
@@ -347,15 +346,17 @@ namespace EXOControlIngreso
 
                 if (sqloutput)
                 {
-                    using (SqlCommand sqlCommand = new SqlCommand("SELECT COUNT(*) from Asistencia where IDAsistencia == @idasistencia", RemoteSqlConnection))
-                    {
-                        sqlCommand.Parameters.AddWithValue("@idasistencia", record.IDAsistencia);
-                        var count = (int)sqlCommand.ExecuteScalar();
-                        if (count == 1)
-                        {
-                            LocalSyncDatabaseSQLiteConnection.Delete<AsistenciaSync>(record.IDAsistencia);
-                        }
-                    }
+                    LocalSyncDatabaseSQLiteConnection.Delete<AsistenciaSync>(record.IDAsistencia);
+
+                    //using (SqlCommand sqlCommand = new SqlCommand("SELECT COUNT(*) from Asistencia where IDAsistencia == @idasistencia", RemoteSqlConnection))
+                    //{
+                    //    sqlCommand.Parameters.AddWithValue("@idasistencia", record.IDAsistencia);
+                    //    var count = (int)sqlCommand.ExecuteScalar();
+                    //    if (count == 1)
+                    //    {
+                    //        LocalSyncDatabaseSQLiteConnection.Delete<AsistenciaSync>(record.IDAsistencia);
+                    //    }
+                    //}
                 }
             }
         }
