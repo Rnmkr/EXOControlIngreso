@@ -50,7 +50,7 @@ namespace EXOControlIngreso
                 InitializeRemoteSqlConnection();
                 InitializeLocalDatabases();
                 InitializeTimers();
-                SyncRemoteDatabase(); //already calls InitializeRemoteSqlConnection();
+                SyncRemoteDatabase(); //
             }
             catch (Exception e)
             {
