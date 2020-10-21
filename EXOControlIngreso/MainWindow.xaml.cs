@@ -114,6 +114,7 @@ namespace EXOControlIngreso
             {
                 LiveDotsTextBlock.Visibility = Visibility.Visible;
             }
+
             LiveHourTextBlock.Text = DateTime.Now.ToString("HH");
             LiveMinutesTextBlock.Text = DateTime.Now.ToString("mm");
 
@@ -346,10 +347,16 @@ namespace EXOControlIngreso
 
                 if (sqloutput)
                 {
-                    LocalSyncDatabaseSQLiteConnection.Delete<AsistenciaSync>(record.IDAsistencia);
+                    using (SqlCommand sqlCommand = new SqlCommand("SELECT COUNT(*) from Asistencia where IDAsistencia == @idasistencia", RemoteSqlConnection))
+                    {
+                        sqlCommand.Parameters.AddWithValue("@idasistencia", record.IDAsistencia);
+                        var count = (int)sqlCommand.ExecuteScalar();
+                        if (count == 1)
+                        {
+                            LocalSyncDatabaseSQLiteConnection.Delete<AsistenciaSync>(record.IDAsistencia);
+                        }
+                    }
                 }
-
-
             }
         }
 
