@@ -28,7 +28,7 @@
         <TextBlock
             Grid.Row="0"
             TextWrapping="NoWrap"
-            Text="Control de Asistencia Producción"
+            Text="ASISTENCIA PRODUCCIÓN"
             FontSize="24"
             FontWeight="Bold"
             HorizontalAlignment="Center"
@@ -43,7 +43,7 @@
                 <TextBlock
                     Name="LiveDateTextBlock"
                     TextWrapping="NoWrap"
-                    Text="%DATE%"
+                    Text="----"
                     FontSize="48"
                     FontWeight="Bold"
                     VerticalAlignment="Center"
@@ -84,7 +84,7 @@
         <Label
             Name="MessageLabel"
             Grid.Row="2"
-            Content="Escanée su código para identificarse"
+            Content="Utilice su código para identificarse"
             FontSize="72"
             FontWeight="Bold"
             VerticalAlignment="Center"

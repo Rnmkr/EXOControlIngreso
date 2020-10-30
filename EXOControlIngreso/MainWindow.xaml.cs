@@ -42,8 +42,10 @@ namespace EXOControlIngreso
             //CheckAuth();
 
             VersionTextBlock.Text = Assembly.GetExecutingAssembly().GetName().Version.ToString();
-            //LiveTimeTextBlock.Text = DateTime.Now.ToString("HH:mm");
-            //LiveDateTextBlock.Text = DateTime.Now.ToLongDateString();
+            LiveHourTextBlock.Text = DateTime.Now.ToString("HH");
+            LiveMinutesTextBlock.Text = DateTime.Now.ToString("mm");
+
+            LiveDateTextBlock.Text = DateTime.Now.ToLongDateString();
 
             try
             {
@@ -70,6 +72,7 @@ namespace EXOControlIngreso
 
         #region Initializers
 
+        //Abre la conexion SQL para reducir el tiempo del primer fichado
         private void InitializeRemoteSqlConnection()
         {
             var RemoteConnectionString = @"Data Source=BUBBA; Initial Catalog=Produccion; Persist Security Info=True; User Id=BUBBASQL; Password=12345678; MultipleActiveResultSets=True";
@@ -77,6 +80,7 @@ namespace EXOControlIngreso
             RemoteSqlConnection.Open();
         }
 
+        //Si no existen las bases de datos las crea
         private void InitializeLocalDatabases()
         {
             UserList = GetRemoteUserList();
@@ -86,15 +90,19 @@ namespace EXOControlIngreso
             LocalSyncDatabaseSQLiteConnection.CreateTable<AsistenciaSync>();
         }
 
+
         private void InitializeTimers()
         {
+            //Actualiza el reloj
             LiveDateTimeTimer.Interval = TimeSpan.FromSeconds(1);
             LiveDateTimeTimer.Tick += LiveDateTimeTimer_Tick;
             LiveDateTimeTimer.Start();
 
+            //Reinicia la espera de un nuevo fichado desde el ultimo intento
             ReadNewKeyInputTimer.Interval = TimeSpan.FromMilliseconds(700);
             ReadNewKeyInputTimer.Tick += ReadNewKeyInputTimer_Tick;
 
+            //Inicia la sincronizacion con la BD a partir del ultimo fichado correcto
             RemoteDatabaseSyncTimer.Interval = TimeSpan.FromSeconds(60);
             RemoteDatabaseSyncTimer.Tick += RemoteDatabaseSyncTimer_Tick;
         }
@@ -103,6 +111,7 @@ namespace EXOControlIngreso
 
         #region tickers
 
+        //Actualiza el reloj en pantalla
         private void LiveDateTimeTimer_Tick(object sender, EventArgs e)
         {
             if (LiveDotsTextBlock.Visibility == Visibility.Visible)
@@ -120,13 +129,15 @@ namespace EXOControlIngreso
             LiveDateTextBlock.Text = DateTime.Now.ToLongDateString();
         }
 
+        //Resetea la espera de un nuevo fichado
         private void ReadNewKeyInputTimer_Tick(object sender, EventArgs e)
         {
             ReadNewKeyInputTimer.Stop();
             KeyInput = string.Empty;
-            MessageLabel.Content = "Escanée su código para identificarse";
+            MessageLabel.Content = "Utilice su código para identificarse";
         }
 
+        //Inicia la sincronizacion con el servidor
         private async void RemoteDatabaseSyncTimer_Tick(object sender, EventArgs e)
         {
             await Task.Run(() =>
@@ -139,6 +150,7 @@ namespace EXOControlIngreso
 
         #region events
 
+        //Procesa la lectura del codigo de barras
         private void Window_PreviewKeyDown(object sender, KeyEventArgs e)
         {
             var key = e.Key.ToString();
@@ -195,6 +207,8 @@ namespace EXOControlIngreso
             }
         }
 
+
+        //Obtiene la lista de usuarios desde el server y la tiene en memoria para un acceso mas rapido
         private List<Usuario> GetRemoteUserList()
         {
             var ul = new List<Usuario>();
@@ -231,6 +245,8 @@ namespace EXOControlIngreso
             return ul;
         }
 
+
+        //Busca el codigo de fichado en la lista de usuarios y llama al metodo que guarda el fichado (InsertNewAttendance)
         private void SetAttendance()
         {
             ReadNewKeyInputTimer.Stop();
@@ -251,20 +267,25 @@ namespace EXOControlIngreso
             ReadNewKeyInputTimer.Start();
         }
 
+        //Guarda el fichado
         private void InsertNewAttendance(Usuario user)
         {
             try
             {
+                //Crea una nueva asistencia para la base de datos local (mirror)
                 Asistencia newAsistencia = new Asistencia { FK_IDPersonal = user.UserID, Fecha = DateTime.Now.ToShortDateString(), Hora = DateTime.Now.ToShortTimeString() };
                 LocalDatabaseSQLiteConnection.Insert(newAsistencia);
-                var lastInsertID = Convert.ToInt32(LocalDatabaseSQLiteConnection.ExecuteScalar<long>("SELECT last_insert_rowid() FROM Asistencia"));
 
-                AsistenciaSync newAsistenciaSync = new AsistenciaSync { IDAsistencia = lastInsertID, FK_IDPersonal = user.UserID, Fecha = DateTime.Now.ToShortDateString(), Hora = DateTime.Now.ToShortTimeString() };
+                //Crea una nueva asistencia para la base de datos de sincronizacion con el ultimo ID obtenido de la DB mirror
+                var lastInsertID = Convert.ToInt32(LocalDatabaseSQLiteConnection.ExecuteScalar<long>("SELECT last_insert_rowid() FROM Asistencia"));
+                AsistenciaSync newAsistenciaSync = new AsistenciaSync { IDAsistencia = lastInsertID, FK_IDPersonal = newAsistencia.FK_IDPersonal, Fecha = newAsistencia.Fecha, Hora = newAsistencia.Hora };
                 LocalSyncDatabaseSQLiteConnection.Insert(newAsistenciaSync);
 
                 MessageLabel.Content = "Correcto, " + user.UserSurname + " " + user.UserName;
                 SpeakAsync("OK");
-                RemoteDatabaseSyncTimer.Stop();
+
+                //Inicia el conteo desde el ultimo fichado correcto para sincronizar la BD de sincronizacion con el server
+                RemoteDatabaseSyncTimer.Stop(); 
                 RemoteDatabaseSyncTimer.Start();
             }
             catch (Exception e)
@@ -279,6 +300,7 @@ namespace EXOControlIngreso
             }
         }
 
+        //Sincroniza la DB con el server
         private void SyncRemoteDatabase()
         {
             try
@@ -303,9 +325,11 @@ namespace EXOControlIngreso
 
         private void ProcessSyncData()
         {
+            //Obtengo la lista de ultimos fichados en la DB de sincronizacion
             var lastRecords = LocalSyncDatabaseSQLiteConnection.Query<AsistenciaSync>("SELECT * FROM AsistenciaSync").ToList();
             if (lastRecords.Count == 0) return;
 
+            //Exporto al sercer
             var RemoteSyncSqlCommand = new SqlCommand("SyncAttendance", RemoteSqlConnection);
             RemoteSyncSqlCommand.CommandType = CommandType.StoredProcedure;
 
@@ -326,6 +350,7 @@ namespace EXOControlIngreso
                 }
                 catch (SqlException e)
                 {
+                    //Si el registro ya existe en el server, lo borro de la DB de sincronizacion
                     if (e.Message.Contains("Violation of PRIMARY KEY constraint"))
                     {
                         sqloutput = true;
@@ -341,22 +366,14 @@ namespace EXOControlIngreso
                 }
                 finally
                 {
+                    //Limpio los parametros del query
                     RemoteSyncSqlCommand.Parameters.Clear();
                 }
 
                 if (sqloutput)
                 {
+                    //Borro el registro de la base de datos de sincronizacion si se exporto al server correctamente
                     LocalSyncDatabaseSQLiteConnection.Delete<AsistenciaSync>(record.IDAsistencia);
-
-                    //using (SqlCommand sqlCommand = new SqlCommand("SELECT COUNT(*) from Asistencia where IDAsistencia == @idasistencia", RemoteSqlConnection))
-                    //{
-                    //    sqlCommand.Parameters.AddWithValue("@idasistencia", record.IDAsistencia);
-                    //    var count = (int)sqlCommand.ExecuteScalar();
-                    //    if (count == 1)
-                    //    {
-                    //        LocalSyncDatabaseSQLiteConnection.Delete<AsistenciaSync>(record.IDAsistencia);
-                    //    }
-                    //}
                 }
             }
         }
