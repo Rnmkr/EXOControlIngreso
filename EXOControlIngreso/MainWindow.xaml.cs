@@ -292,7 +292,7 @@ namespace EXOControlIngreso
             {
                 using (StreamWriter w = File.AppendText("ControlIngreso.log"))
                 {
-                    Log("ERROR SETNEWATTENDANCE" + Environment.NewLine + e.ToString() + Environment.NewLine, w);
+                    Log("ERROR INSERTNEWATTENDANCE" + Environment.NewLine + e.ToString() + Environment.NewLine, w);
                 }
 
                 MessageLabel.Content = "ERROR";
