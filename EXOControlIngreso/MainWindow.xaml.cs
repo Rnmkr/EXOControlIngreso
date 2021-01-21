@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Data;
 using System.Data.SqlClient;
+using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Reflection;
@@ -142,6 +143,7 @@ namespace EXOControlIngreso
         {
             await Task.Run(() =>
             {
+                SyncTime();
                 SyncRemoteDatabase();
             });
         }
@@ -177,6 +179,21 @@ namespace EXOControlIngreso
 
         #region methods
 
+        private void SyncTime()
+        {
+            try
+            {
+                Process p = new Process();
+                p.StartInfo.UseShellExecute = false;
+                p.StartInfo.CreateNoWindow = true;
+                p.StartInfo.FileName = "NET";
+                p.StartInfo.Arguments = "TIME \\\\BUBBA /SET /YES";
+                p.Start();
+            }
+            catch (Exception)
+            {
+            }
+        }
         private void CheckAuth()
         {
             try
@@ -285,7 +302,7 @@ namespace EXOControlIngreso
                 SpeakAsync("OK");
 
                 //Inicia el conteo desde el ultimo fichado correcto para sincronizar la BD de sincronizacion con el server
-                RemoteDatabaseSyncTimer.Stop(); 
+                RemoteDatabaseSyncTimer.Stop();
                 RemoteDatabaseSyncTimer.Start();
             }
             catch (Exception e)
@@ -426,5 +443,7 @@ namespace EXOControlIngreso
         }
 
         #endregion
+
+
     }
 }
