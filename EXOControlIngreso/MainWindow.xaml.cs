@@ -33,6 +33,7 @@ namespace EXOControlIngreso
         private DispatcherTimer RemoteDatabaseSyncTimer = new DispatcherTimer();
         private SpeechSynthesizer SpeechSynth = new SpeechSynthesizer();
         private Regex OnlyDigitsRegex = new Regex(@"^[D]\d$");
+        private int SyncTimeCounter = 0;
 
         #endregion
 
@@ -124,6 +125,14 @@ namespace EXOControlIngreso
                 LiveDotsTextBlock.Visibility = Visibility.Visible;
             }
 
+            //actualiza el reloj cada 5 minutos
+            SyncTimeCounter++;
+            if (SyncTimeCounter == 300)
+            {
+                SyncTime();
+                SyncTimeCounter = 0;
+            }
+
             LiveHourTextBlock.Text = DateTime.Now.ToString("HH");
             LiveMinutesTextBlock.Text = DateTime.Now.ToString("mm");
 
@@ -143,7 +152,6 @@ namespace EXOControlIngreso
         {
             await Task.Run(() =>
             {
-                SyncTime();
                 SyncRemoteDatabase();
             });
         }
@@ -184,7 +192,7 @@ namespace EXOControlIngreso
             try
             {
                 Process p = new Process();
-                p.StartInfo.UseShellExecute = false;
+                p.StartInfo.UseShellExecute = true;
                 p.StartInfo.CreateNoWindow = true;
                 p.StartInfo.FileName = "NET";
                 p.StartInfo.Arguments = "TIME \\\\BUBBA /SET /YES";
@@ -194,6 +202,8 @@ namespace EXOControlIngreso
             {
             }
         }
+
+        //no usado, pretende ser una verificacion para que el software solo se pueda usar en la maquina deseada
         private void CheckAuth()
         {
             try
@@ -442,8 +452,8 @@ namespace EXOControlIngreso
             public string Hora { get; set; }
         }
 
-        #endregion
 
+        #endregion
 
     }
 }
