@@ -84,8 +84,8 @@ namespace EXOControlIngreso
         private void InitializeLocalDatabases()
         {
             UserList = GetRemoteUserList();
-            LocalDatabaseSQLiteConnection = new SQLiteConnection(DateTime.Now.Year.ToString() + "attendance.db");
-            LocalSyncDatabaseSQLiteConnection = new SQLiteConnection(DateTime.Now.Year.ToString() + "attendancesync.db");
+            LocalDatabaseSQLiteConnection = new SQLiteConnection("attendance.db");
+            LocalSyncDatabaseSQLiteConnection = new SQLiteConnection("attendancesync.db");
             LocalDatabaseSQLiteConnection.CreateTable<Asistencia>();
             LocalSyncDatabaseSQLiteConnection.CreateTable<AsistenciaSync>();
         }
